@@ -8,61 +8,66 @@ import { TabsContent } from "@/components/shadcn/tabs";
 import { Download } from 'lucide-react';
 
 export default function Encode() {
-  const [encodedImage, setEncodedImage] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null); // Reference for the canvas
-  const [secretMessage, setSecretMessage] = useState<string>('');
+  const [encoding, setEncoding] = useState<{
+    rawImage: string | null;
+    secretMessage: string;
+    isEncoding: boolean;
+    status: string | null;
+    isImageEncoded: boolean;
+    encodedImage?: string;
+  }>({
+    rawImage: null,
+    secretMessage: '',
+    isEncoding: false,
+    status: null,
+    isImageEncoded: false,
+    encodedImage: '',
+  });
 
-  const handleEncode = async (e: React.FormEvent<HTMLFormElement>) => {
+  
+
+
+  const handleRawImageEncoding =  async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const fileInput = document.getElementById('coverImage') as HTMLInputElement;
 
-    if (fileInput.files && fileInput.files[0]) {
-      const file = fileInput.files[0];
+    const imageInput = document.getElementById('coverImage') as HTMLInputElement;
+
+    if (imageInput.files && imageInput.files[0]) {
+      const unencodedImage = imageInput.files[0];
       const reader = new FileReader();
 
       reader.onload = () => {
-        const img = new Image();
-        img.src = reader.result as string;
+        // Decode the image data
 
-        img.onload = () => {
-          const canvas = canvasRef.current;
-          if (!canvas) return;
+        // Pass the image data to the Rust/Wasm module
 
-          const ctx = canvas.getContext('2d');
-          if (!ctx) return;
+        // The encoded image data will be returned from the Rust/Wasm module
 
-          // Resize canvas to match image dimensions
-          canvas.width = img.width;
-          canvas.height = img.height;
+        // Get that encoded image data and set it to the canvas and state.
 
-          // Draw image onto the canvas
-          ctx.drawImage(img, 0, 0);
+        // Encoded image should be displayed on the canvas and the state.
+        // Also, the download button should be enabled.
+      }
 
-          // Overlay the secret message (for demonstration purposes)
-          ctx.font = '20px Arial';
-          ctx.fillStyle = 'red';
-          ctx.fillText(secretMessage, 10, img.height - 30);
+      reader.readAsDataURL(unencodedImage);  
+  } 
+}
 
-          // Get the final encoded image as a Data URL
-          const encodedURL = canvas.toDataURL('image/png');
-          setEncodedImage(encodedURL);
-        };
-      };
+  
 
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const downloadImage = () => {}
+  const downloadImage = () => {
+    // download the encoded image
+  }
 
   return (
     <TabsContent value="encode">
       <Card>
         <CardContent className="pt-6">
-          <form onSubmit={handleEncode} className="space-y-4">
+          <form onSubmit={handleRawImageEncoding} className="space-y-4">
             <div>
               <Label htmlFor="coverImage">Image</Label>
-              <Input id="coverImage" type="file" accept="image/*" />
+              <Input id="coverImage" type="file" accept="image/*" className='text-sm' />
             </div>
             <div>
               <Label htmlFor="secretMessage">Secret Message</Label>
@@ -70,16 +75,17 @@ export default function Encode() {
                 id="secretMessage"
                 type="text"
                 placeholder="Enter your secret message"
-                value={secretMessage}
-                onChange={(e) => setSecretMessage(e.target.value)}
+                className='text-sm'
+                value={encoding.secretMessage}
+                onChange={(e) => setEncoding({ ...encoding, secretMessage: e.target.value })}
               />
             </div>
             <Button type="submit" className='w-full'>Encode</Button>
           </form>
-          {encodedImage && (
+          {encoding.isImageEncoded && (
             <div className="mt-4">
               <h3 className="text-lg font-semibold mb-2">Encoded Image:</h3>
-              <img src={encodedImage} alt="Encoded"  className="rounded-lg w-full" />
+              <img src={encoding.encodedImage} alt="Encoded"  className="rounded-lg w-full" />
               <Button className='mt-4 w-full' onClick={downloadImage}><Download/> Download Image</Button>
             </div>
           )}

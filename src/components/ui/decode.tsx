@@ -22,14 +22,12 @@ export default function Decode() {
             <Label htmlFor="encodedImage">Encoded Image</Label>
             <Input id="encodedImage" type="file" accept="image/*" />
           </div>
-          <Button type="submit">Decode</Button>
+          <Button type="submit" className='w-full'>Decode</Button>
         </form>
-        {decodedMessage && (
-          <div className="mt-4">
+        <div className="mt-4">
             <h3 className="text-lg font-semibold mb-2">Decoded Message:</h3>
-            <p className="p-2 bg-muted rounded-lg">{decodedMessage}</p>
-          </div>
-        )}
+            <p className="p-3 bg-muted rounded-lg">{decodedMessage}</p>
+        </div>
       </CardContent>
     </Card>
   </TabsContent>
