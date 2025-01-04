@@ -6,6 +6,8 @@ import { Label } from "@/components/shadcn/label";
 import { Card, CardContent } from "@/components/shadcn/card";
 import { TabsContent } from "@/components/shadcn/tabs";
 import { Download } from 'lucide-react';
+import { decodeDataUrl, encodeMessage } from '@/lib/steganography';
+
 
 export default function Encode() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null); // Reference for the canvas
@@ -27,6 +29,8 @@ export default function Encode() {
 
   
 
+  
+
 
   const handleRawImageEncoding =  async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -35,30 +39,49 @@ export default function Encode() {
 
     if (imageInput.files && imageInput.files[0]) {
       const unencodedImage = imageInput.files[0];
+      if (!unencodedImage.type.startsWith('image/')) {
+        setEncoding({ ...encoding, status: 'Please upload an image file.' });
+        return;
+      }
       const reader = new FileReader();
 
-      reader.onload = () => {
-        // Decode the image data
-
-        // Pass the image data to the Rust/Wasm module
-
-        // The encoded image data will be returned from the Rust/Wasm module
-
-        // Get that encoded image data and set it to the canvas and state.
-
-        // Encoded image should be displayed on the canvas and the state.
-        // Also, the download button should be enabled.
+      reader.onload = async () => {
+        if (reader.result) {
+          const dataUrl = reader.result as string;
+          const binaryData = decodeDataUrl(dataUrl);
+          console.log(binaryData);
+          const encodedImage = await encodeMessage(binaryData, encoding.secretMessage);
+          if (canvasRef.current) {
+            const ctx = canvasRef.current.getContext('2d');
+            const image = new Image();
+            image.src = URL.createObjectURL(new Blob([encodedImage]));
+            image.onload = () => {
+              if (canvasRef.current) {
+                canvasRef.current.width = image.width;
+                canvasRef.current.height = image.height;
+                ctx?.drawImage(image, 0, 0);
+                const encodedImageUrl = canvasRef.current.toDataURL();
+                setEncoding({ ...encoding, isImageEncoded: true, encodedImage: encodedImageUrl });
+              }
+            };
+          }
+        setEncoding({ ...encoding, isEncoding: false, status: "Encoding Complete", });
+          
+        }
       }
-
       reader.readAsDataURL(unencodedImage);  
   } 
 }
 
   
 
-  const downloadImage = () => {
-    // download the encoded image
-  }
+function downloadImage(imageUrl: string | undefined) {
+  const link = document.createElement('a');
+  if (!imageUrl) return;
+  link.href = imageUrl;
+  link.download = 'encodedimage.jpg'; 
+  link.click();
+}
 
   return (
     <TabsContent value="encode">
@@ -86,9 +109,12 @@ export default function Encode() {
             <div className="mt-4">
               <h3 className="text-lg font-semibold mb-2">Encoded Image:</h3>
               <img src={encoding.encodedImage} alt="Encoded"  className="rounded-lg w-full" />
-              <Button className='mt-4 w-full' onClick={downloadImage}><Download/> Download Image</Button>
+              <Button className='mt-4 w-full' onClick={() => downloadImage(encoding.encodedImage)}><Download/> Download Image</Button>
             </div>
           )}
+            {encoding.status && (<div>
+          <p>Status: {encoding.status}</p>
+        </div>)}
           {/* Hidden canvas for encoding logic */}
           <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
         </CardContent>

@@ -1,0 +1,1 @@
+C:\Users\braxt\OneDrive\Documents\coding\ projects\brx_steganography-tool\src\lib\rust\target\wasm32-unknown-unknown\release\brx_steganography_tool.wasm: C:\Users\braxt\OneDrive\Documents\coding\ projects\brx_steganography-tool\src\lib\rust\src\lib.rs
